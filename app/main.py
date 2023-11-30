@@ -25,13 +25,13 @@ groups = df.groupby(['Conta', 'Valor'])
 filtered_groups = groups.filter(lambda x: process_group(x))
 
 # Assigning IdentLan values
-identlan_value = 1
+identlan_value = 568954
 for (conta, valor), group in filtered_groups.groupby(['Conta', 'Valor']):
     df.loc[group.index, 'IdentLan'] = identlan_value
     identlan_value += 1
 
 # Display the modified DataFrame
-print(df.head(10))
+print(df['IdentLan'].max())
 
 # %%
 
@@ -59,3 +59,38 @@ print(df_total_encontrado)
 df_total_nao_encontrado = df3.groupby('Tipo')['Valor'].sum().map('${:,.2f}'.format)
 print(df_total_nao_encontrado)
 
+
+# %%
+identlan_value = df2['IdentLan'].max() + 1
+print(identlan_value)
+
+
+# assign identlan values to df3
+for index, row in df3.iterrows():
+    df3.loc[index, 'IdentLan'] = identlan_value
+    identlan_value += 1
+
+# now duplicate this df3 to a new dataframe
+# but change invert the 'Tipo' column if it's 'C' or 'D'
+df4 = df3.copy()
+df4.loc[df4['Tipo'] == 'C', 'Tipo'] = 'D'
+df4.loc[df4['Tipo'] == 'D', 'Tipo'] = 'C'
+
+# in the new df modify all values in Conta column to '11010105
+df4['Conta'] = 11010105
+
+# what is the datatype of the Conta column? in the df3
+print(df3['Conta'].dtype)
+print(df4['Conta'].dtype)
+
+# now append df4 to df3
+df5 = pd.concat([df3, df4, df2], ignore_index=True)
+
+# order by identlan ascending
+df5 = df5.sort_values(by=['IdentLan'])
+
+# Display the modified DataFrame
+print(df5.head(10))
+
+# export df5 to excel
+df5.to_excel('../data/movcont2.xlsx', index=False)
